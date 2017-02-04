@@ -1,12 +1,16 @@
 package main
 
-import "github.com/gocraft/web"
+import (
+	"fmt"
+
+	"github.com/gocraft/web"
+)
 
 func setRouter() *web.Router {
 	router := web.New(GlobalContext{}).
 		Middleware(web.LoggerMiddleware).
 		Middleware(web.ShowErrorsMiddleware).
-		Middleware(web.StaticMiddleware("./static", web.StaticOption{})).
+		Middleware(web.StaticMiddleware("./"+config.StaticFolder, web.StaticOption{})).
 		NotFound((*GlobalContext).NotFound)
 
 	loadControllers(router)
@@ -16,4 +20,8 @@ func setRouter() *web.Router {
 
 func loadControllers(router *web.Router) {
 	UserController(router)
+}
+
+func (c *GlobalContext) NotFound(rw web.ResponseWriter, req *web.Request) {
+	fmt.Fprint(rw, "Route not found, sorry")
 }
