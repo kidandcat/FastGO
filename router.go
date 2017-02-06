@@ -6,12 +6,15 @@ import (
 	"github.com/gocraft/web"
 )
 
+var cxt GlobalContext
+
 func setRouter() *web.Router {
-	router := web.New(GlobalContext{}).
+	cxt = GlobalContext{}
+	router := web.New(cxt).
 		Middleware(web.LoggerMiddleware).
 		Middleware(web.ShowErrorsMiddleware).
 		Middleware(web.StaticMiddleware("./"+config.StaticFolder, web.StaticOption{})).
-		NotFound((*GlobalContext).NotFound)
+		NotFound((cxt).NotFound)
 
 	loadControllers(router)
 

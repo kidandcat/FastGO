@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+
+	"github.com/gocraft/web"
 )
 
 type Config struct {
@@ -42,3 +44,31 @@ func loadConfig() {
 		panicOnError(err)
 	}
 }
+
+func jsonParse(req *web.Request, target interface{}) (interface{}, error) {
+	decoder := json.NewDecoder(req.Body)
+	err := decoder.Decode(&target)
+	defer req.Body.Close()
+	return target, err
+}
+
+func jsonAnswer(rw web.ResponseWriter, data interface{}) {
+	if rw.Written() == false {
+		data, err := json.Marshal(data)
+		jsonError(rw, err)
+		rw.Header().Set("Content-Type", "application/json")
+		rw.Write(data)
+	}
+}
+
+func jsonError(rw web.ResponseWriter, err error) {
+	if err != nil {
+		jData, _ := json.Marshal(jsn{
+			"Error": err.Error(),
+		})
+		rw.Header().Set("Content-Type", "application/json")
+		rw.Write(jData)
+	}
+}
+
+type jsn map[string]string
