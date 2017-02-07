@@ -12,6 +12,11 @@ type User struct {
 	Name string `json:"name"`
 }
 
+type DataKey struct {
+	Key  string `json:"key"`
+	Data User   `json:"data"`
+}
+
 var db *redis.Client
 
 func UserController(router *web.Router) {
@@ -34,12 +39,15 @@ func UserController(router *web.Router) {
 func (c *GlobalContext) Find(rw web.ResponseWriter, req *web.Request) {
 	keys, er := db.Keys("*").Result()
 	jsonError(rw, er)
-	var us []User
+	var us []DataKey
 	for _, e := range keys {
 		val, _ := db.Get(e).Result()
 		var u User
 		_ = json.Unmarshal([]byte(val), &u)
-		us = append(us, u)
+		us = append(us, DataKey{
+			Data: u,
+			Key:  e,
+		})
 	}
 	jsonAnswer(rw, us)
 }
@@ -51,14 +59,17 @@ func (c *GlobalContext) Get(rw web.ResponseWriter, req *web.Request) {
 
 // POST /messages
 func (c *GlobalContext) Create(rw web.ResponseWriter, req *web.Request) {
+	key, err := db.RandomKey().Result()
+	jsonError(rw, err)
 	u, err1 := jsonParse(req, new(User))
 	jsonError(rw, err1)
 	res, err2 := json.Marshal(u)
 	jsonError(rw, err2)
-	err3 := db.Set("key", res, 0).Err()
+	err3 := db.Set(key, res, 0).Err()
 	jsonError(rw, err3)
 	jsonAnswer(rw, jsn{
 		"status": "OK",
+		"key":    key,
 	})
 }
 
