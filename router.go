@@ -16,8 +16,7 @@ func setRouter() *web.Router {
 		Middleware(web.StaticMiddleware("./"+config.StaticFolder, web.StaticOption{})).
 		NotFound((cxt).NotFound)
 
-	Controller(router, "user", "localhost:6666", "")
-	Controller(router, "call", "localhost:6667", "")
+	Services(router)
 
 	return router
 }
