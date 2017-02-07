@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"github.com/gocraft/web"
@@ -16,7 +17,7 @@ type DataKey struct {
 	Data Anon   `json:"data"`
 }
 
-var db map[string]*redis.Client
+var db = map[string]*redis.Client{}
 
 func Controller(router *web.Router, serviceName string, addr string, pass string) {
 	router.Subrouter(cxt, "/"+serviceName).
@@ -26,8 +27,6 @@ func Controller(router *web.Router, serviceName string, addr string, pass string
 		Put("/:id", (*GlobalContext).Update).
 		Patch("/:id", (*GlobalContext).Patch).
 		Delete("/:id", (*GlobalContext).Remove)
-
-	db = map[string]*redis.Client{}
 
 	db[serviceName] = redis.NewClient(&redis.Options{
 		Addr:     addr,
@@ -67,8 +66,7 @@ func (c *GlobalContext) Get(rw web.ResponseWriter, req *web.Request) {
 // POST /messages
 func (c *GlobalContext) Create(rw web.ResponseWriter, req *web.Request) {
 	service := strings.Split(req.RoutePath(), "/")[1]
-	key, err := db[service].RandomKey().Result()
-	jsonError(rw, err)
+	key := randomKey(service)
 	u, err1 := jsonParse(req, new(Anon))
 	jsonError(rw, err1)
 	res, err2 := json.Marshal(u)
@@ -104,5 +102,22 @@ func (c *GlobalContext) Remove(rw web.ResponseWriter, req *web.Request) {
 		jsonAnswer(rw, jsn{
 			"Error": "Not Found",
 		})
+	}
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randomKey(service string) string {
+	b := make([]rune, 20)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	key := string(b)
+
+	r, _ := db[service].Exists(key).Result()
+	if r == false {
+		return key
+	} else {
+		return randomKey(service)
 	}
 }
