@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/gocraft/web"
 	"gopkg.in/redis.v5"
@@ -17,7 +18,15 @@ type DataKey struct {
 	Data Anon   `json:"data"`
 }
 
-var db = map[string]*redis.Client{}
+var db = map[string]dbc{}
+
+type dbc interface {
+	Get(string) *redis.StringCmd
+	Set(string, interface{}, time.Duration) *redis.StatusCmd
+	Del(...string) *redis.IntCmd
+	Keys(string) *redis.StringSliceCmd
+	Exists(string) *redis.BoolCmd
+}
 
 func Controller(router *web.Router, serviceName string, addr string, pass string) {
 	router.Subrouter(cxt, "/"+serviceName).
@@ -28,11 +37,15 @@ func Controller(router *web.Router, serviceName string, addr string, pass string
 		Patch("/:id", (*GlobalContext).Patch).
 		Delete("/:id", (*GlobalContext).Remove)
 
-	db[serviceName] = redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: pass,
-		DB:       0,
-	})
+	if addr == "" {
+		db[serviceName] = memory()
+	} else {
+		db[serviceName] = redis.NewClient(&redis.Options{
+			Addr:     addr,
+			Password: pass,
+			DB:       0,
+		})
+	}
 }
 
 // GET /messages
@@ -71,7 +84,7 @@ func (c *GlobalContext) Create(rw web.ResponseWriter, req *web.Request) {
 	jsonError(rw, err1)
 	res, err2 := json.Marshal(u)
 	jsonError(rw, err2)
-	err3 := db[service].Set(key, res, 0).Err()
+	err3 := db[service].Set(key, string(res), 0).Err()
 	jsonError(rw, err3)
 	jsonAnswer(rw, jsn{
 		"status": "OK",

@@ -8,8 +8,9 @@ func Services(router *web.Router) {
 	//             endpoint name       |     Redis Password
 	//                   |             |          |
 	//                   v             v          v
-	Controller(router, "user", "localhost:6666", "")
-	Controller(router, "call", "localhost:6667", "")
+	Controller(router, "user1", "localhost:6666", "")
+	// If third parameter is empty, then in memory storage is used
+	Controller(router, "user2", "", "")
 }
 
 //      Redis Example Configuration
