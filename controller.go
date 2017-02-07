@@ -3,24 +3,23 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/gocraft/web"
 	"gopkg.in/redis.v5"
 )
 
-type User struct {
-	Name string `json:"name"`
-}
+type Anon interface{}
 
 type DataKey struct {
 	Key  string `json:"key"`
-	Data User   `json:"data"`
+	Data Anon   `json:"data"`
 }
 
-var db *redis.Client
+var db map[string]*redis.Client
 
-func UserController(router *web.Router) {
-	router.Subrouter(cxt, "/user").
+func Controller(router *web.Router, serviceName string, addr string, pass string) {
+	router.Subrouter(cxt, "/"+serviceName).
 		Get("/", (*GlobalContext).Find).
 		Get("/:id", (*GlobalContext).Get).
 		Post("/", (*GlobalContext).Create).
@@ -28,21 +27,24 @@ func UserController(router *web.Router) {
 		Patch("/:id", (*GlobalContext).Patch).
 		Delete("/:id", (*GlobalContext).Remove)
 
-	db = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
+	db = map[string]*redis.Client{}
+
+	db[serviceName] = redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: pass,
 		DB:       0,
 	})
 }
 
 // GET /messages
 func (c *GlobalContext) Find(rw web.ResponseWriter, req *web.Request) {
-	keys, er := db.Keys("*").Result()
+	service := strings.Split(req.RoutePath(), "/")[1]
+	keys, er := db[service].Keys("*").Result()
 	jsonError(rw, er)
 	var us []DataKey
 	for _, e := range keys {
-		val, _ := db.Get(e).Result()
-		var u User
+		val, _ := db[service].Get(e).Result()
+		var u Anon
 		_ = json.Unmarshal([]byte(val), &u)
 		us = append(us, DataKey{
 			Data: u,
@@ -54,18 +56,24 @@ func (c *GlobalContext) Find(rw web.ResponseWriter, req *web.Request) {
 
 // GET /messages/<id>
 func (c *GlobalContext) Get(rw web.ResponseWriter, req *web.Request) {
-	fmt.Fprint(rw, "GET executed")
+	service := strings.Split(req.RoutePath(), "/")[1]
+	r, err1 := db[service].Get(req.PathParams["id"]).Result()
+	jsonError(rw, err1)
+	var u Anon
+	_ = json.Unmarshal([]byte(r), &u)
+	jsonAnswer(rw, u)
 }
 
 // POST /messages
 func (c *GlobalContext) Create(rw web.ResponseWriter, req *web.Request) {
-	key, err := db.RandomKey().Result()
+	service := strings.Split(req.RoutePath(), "/")[1]
+	key, err := db[service].RandomKey().Result()
 	jsonError(rw, err)
-	u, err1 := jsonParse(req, new(User))
+	u, err1 := jsonParse(req, new(Anon))
 	jsonError(rw, err1)
 	res, err2 := json.Marshal(u)
 	jsonError(rw, err2)
-	err3 := db.Set(key, res, 0).Err()
+	err3 := db[service].Set(key, res, 0).Err()
 	jsonError(rw, err3)
 	jsonAnswer(rw, jsn{
 		"status": "OK",
@@ -85,5 +93,16 @@ func (c *GlobalContext) Patch(rw web.ResponseWriter, req *web.Request) {
 
 // DELETE /messages[/<id>]
 func (c *GlobalContext) Remove(rw web.ResponseWriter, req *web.Request) {
-	fmt.Fprint(rw, "REMOVE executed")
+	service := strings.Split(req.RoutePath(), "/")[1]
+	r, err := db[service].Del(req.PathParams["id"]).Result()
+	jsonError(rw, err)
+	if r == 1 {
+		jsonAnswer(rw, jsn{
+			"status": "OK",
+		})
+	} else {
+		jsonAnswer(rw, jsn{
+			"Error": "Not Found",
+		})
+	}
 }

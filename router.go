@@ -16,13 +16,9 @@ func setRouter() *web.Router {
 		Middleware(web.StaticMiddleware("./"+config.StaticFolder, web.StaticOption{})).
 		NotFound((cxt).NotFound)
 
-	loadControllers(router)
+	Controller(router, "user", "localhost:6379", "")
 
 	return router
-}
-
-func loadControllers(router *web.Router) {
-	UserController(router)
 }
 
 func (c *GlobalContext) NotFound(rw web.ResponseWriter, req *web.Request) {
