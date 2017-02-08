@@ -19,6 +19,7 @@ type DataKey struct {
 
 var db = map[string]dbc{}
 
+// TODO: Generic database wrapper
 type dbc interface {
 	Get(string) *redis.StringCmd
 	Set(string, interface{}, time.Duration) *redis.StatusCmd
@@ -27,6 +28,7 @@ type dbc interface {
 	Exists(string) *redis.BoolCmd
 }
 
+// TODO: Accept storage parameter (memory, redis, redisCluster, postgre)
 func Controller(router *web.Router, serviceName string, addr string, pass string) {
 	router.Subrouter(cxt, "/"+serviceName).
 		Get("/", (*GlobalContext).Find).
@@ -36,6 +38,7 @@ func Controller(router *web.Router, serviceName string, addr string, pass string
 		Patch("/:id", (*GlobalContext).Patch).
 		Delete("/:id", (*GlobalContext).Remove)
 
+		// TODO: Switch storage parameter
 	if addr == "" {
 		db[serviceName] = memory()
 	} else {
@@ -47,9 +50,13 @@ func Controller(router *web.Router, serviceName string, addr string, pass string
 	}
 }
 
+// TODO: Generic database wrapper
+// TODO: Accept ID parameter as queryString
+
 // GET /messages
 func (c *GlobalContext) Find(rw web.ResponseWriter, req *web.Request) {
 	service := strings.Split(req.RoutePath(), "/")[1]
+	// TODO: Allow filters
 	keys, er := db[service].Keys("*").Result()
 	jsonError(rw, er)
 	var us []DataKey
@@ -78,6 +85,7 @@ func (c *GlobalContext) Get(rw web.ResponseWriter, req *web.Request) {
 // POST /messages
 func (c *GlobalContext) Create(rw web.ResponseWriter, req *web.Request) {
 	service := strings.Split(req.RoutePath(), "/")[1]
+	// TODO: Allow set Key as parameter at creating
 	key := randomKey(service)
 	u, err1 := jsonParse(req, new(Anon))
 	jsonError(rw, err1)
@@ -142,6 +150,7 @@ func (c *GlobalContext) Remove(rw web.ResponseWriter, req *web.Request) {
 	}
 }
 
+// TODO: Pass Key size as config parameter
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func randomKey(service string) string {

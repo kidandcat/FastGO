@@ -20,7 +20,6 @@ type GlobalContext struct{}
 
 func main() {
 	loadConfig()
-
 	router := setRouter()
 
 	fmt.Println("Server listening at ", config.Port)
@@ -33,6 +32,7 @@ func panicOnError(err error) {
 	}
 }
 
+// TODO: Handle config file inexistence
 func loadConfig() {
 	configFile, err := os.Open("config.json")
 	if err != nil {
@@ -61,6 +61,7 @@ func jsonAnswer(rw web.ResponseWriter, data interface{}) {
 	}
 }
 
+// TODO: Handle error
 func jsonError(rw web.ResponseWriter, err error) {
 	if err != nil {
 		jData, _ := json.Marshal(jsn{
