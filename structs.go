@@ -1,5 +1,9 @@
 package main
 
+import (
+	redis "gopkg.in/redis.v5"
+)
+
 type ResultString struct {
 	Data  string
 	Error error
@@ -46,6 +50,10 @@ type GlobalContext struct{}
 
 type jsn map[string]interface{}
 
-type storage struct {
+type memoryStorage struct {
 	Memory map[string]string
+}
+
+type redisStorage struct {
+	Memory *redis.Client
 }

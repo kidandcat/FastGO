@@ -5,13 +5,15 @@ import (
 	"math/rand"
 	"strings"
 
+	redis "gopkg.in/redis.v5"
+
 	"github.com/gocraft/web"
 )
 
 var db = map[string]dbc{}
 
 // TODO: Accept storage parameter (memory, redis, redisCluster, postgre)
-func Controller(router *web.Router, serviceName string, addr string, pass string) {
+func Controller(router *web.Router, serviceName string, storage string, options jsn) {
 	router.Subrouter(cxt, "/"+serviceName).
 		//Find
 		Get("/", (*GlobalContext).Find).
@@ -26,16 +28,16 @@ func Controller(router *web.Router, serviceName string, addr string, pass string
 		//Remove
 		Delete("/:id", (*GlobalContext).Remove)
 
-	if addr == "" {
-		db[serviceName] = memory()
+	switch storage {
+	case "memory":
+		db[serviceName] = Jmemory()
+	case "redis":
+		db[serviceName] = Jredis(&redis.Options{
+			Addr:     options["Addr"].(string),
+			Password: options["Password"].(string),
+			DB:       0,
+		})
 	}
-	// else {
-	// 	db[serviceName] = redis.NewClient(&redis.Options{
-	// 		Addr:     addr,
-	// 		Password: pass,
-	// 		DB:       0,
-	// 	})
-	// }
 }
 
 // TODO: Generic database wrapper

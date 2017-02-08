@@ -10,5 +10,8 @@ func Services(router *web.Router) {
 	//Controller(router, "user1", "localhost:6666", "")
 	//
 	// If third parameter is empty, then in memory storage is used
-	Controller(router, "user2", "", "")
+	Controller(router, "user2", "redis", jsn{
+		"Addr":     "localhost:6666",
+		"Password": "",
+	})
 }
