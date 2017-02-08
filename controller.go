@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -94,12 +93,37 @@ func (c *GlobalContext) Create(rw web.ResponseWriter, req *web.Request) {
 
 // PUT /messages[/<id>]
 func (c *GlobalContext) Update(rw web.ResponseWriter, req *web.Request) {
-	fmt.Fprint(rw, "UPDATE executed")
+	service := strings.Split(req.RoutePath(), "/")[1]
+	u, err1 := jsonParse(req, new(Anon))
+	jsonError(rw, err1)
+	res, err2 := json.Marshal(u)
+	jsonError(rw, err2)
+	err3 := db[service].Set(req.PathParams["id"], string(res), 0).Err()
+	jsonError(rw, err3)
+	jsonAnswer(rw, u)
 }
 
 // PATCH /messages[/<id>]
 func (c *GlobalContext) Patch(rw web.ResponseWriter, req *web.Request) {
-	fmt.Fprint(rw, "PATCH executed")
+	service := strings.Split(req.RoutePath(), "/")[1]
+	var uu map[string]string
+	u, err1 := jsonParse(req, uu)
+	jsonError(rw, err1)
+	r, err4 := db[service].Get(req.PathParams["id"]).Result()
+	jsonError(rw, err4)
+	var rr map[string]string
+	err5 := json.Unmarshal([]byte(r), rr)
+	jsonError(rw, err5)
+
+	for k, v := range uu {
+		rr[k] = v
+	}
+
+	res, err2 := json.Marshal(rr)
+	jsonError(rw, err2)
+	err3 := db[service].Set(req.PathParams["id"], string(res), 0).Err()
+	jsonError(rw, err3)
+	jsonAnswer(rw, u)
 }
 
 // DELETE /messages[/<id>]

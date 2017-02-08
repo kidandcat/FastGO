@@ -24,7 +24,7 @@ func main() {
 	router := setRouter()
 
 	fmt.Println("Server listening at ", config.Port)
-	panicOnError(http.ListenAndServe("localhost:"+config.Port, router))
+	panicOnError(http.ListenAndServe("0.0.0.0:"+config.Port, router))
 }
 
 func panicOnError(err error) {
