@@ -9,14 +9,7 @@ import (
 	"github.com/gocraft/web"
 )
 
-type Config struct {
-	Port         string `json:"port"`
-	StaticFolder string `json:"staticFolder"`
-}
-
 var config Config
-
-type GlobalContext struct{}
 
 func main() {
 	loadConfig()
@@ -45,11 +38,18 @@ func loadConfig() {
 	}
 }
 
-func jsonParse(req *web.Request, target interface{}) (interface{}, error) {
+func jsonReqParse(req *web.Request, target interface{}) (interface{}, error) {
 	decoder := json.NewDecoder(req.Body)
 	err := decoder.Decode(&target)
 	defer req.Body.Close()
 	return target, err
+}
+
+func jsonParse(data string) jsn {
+	s := jsn{}
+	err := json.Unmarshal([]byte(data), &s)
+	panicOnError(err)
+	return s
 }
 
 func jsonAnswer(rw web.ResponseWriter, data interface{}) {
@@ -71,5 +71,3 @@ func jsonError(rw web.ResponseWriter, err error) {
 		rw.Write(jData)
 	}
 }
-
-type jsn map[string]string
