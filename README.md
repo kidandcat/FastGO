@@ -19,7 +19,7 @@ Configure your Services, and boom! you have your REST api.
 4. Push to the branch: `git push origin my-new-feature`
 5. Submit a pull request :D
 
-You can check the TODO list [here](https://github.com/kidandcat/FeathersGO/issues/1)
+__You can check the TODO list__ [here](https://github.com/kidandcat/FeathersGO/issues/1)
 
 ## History
 
