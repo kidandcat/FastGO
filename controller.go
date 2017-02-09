@@ -14,7 +14,7 @@ var db = map[string]dbc{}
 
 // TODO: Accept storage parameter (memory, redis, redisCluster, postgre)
 func Controller(router *web.Router, serviceName string, storage string, options jsn) {
-	router.Subrouter(cxt, "/"+serviceName).
+	router.Subrouter(cxt, config.ApiPrefix+"/"+serviceName).
 		//Find
 		Get("/", (*GlobalContext).Find).
 		//Get
@@ -29,14 +29,14 @@ func Controller(router *web.Router, serviceName string, storage string, options 
 		Delete("/:id", (*GlobalContext).Remove)
 
 	switch storage {
-	case "memory":
-		db[serviceName] = Jmemory()
 	case "redis":
 		db[serviceName] = Jredis(&redis.Options{
 			Addr:     options["Addr"].(string),
 			Password: options["Password"].(string),
 			DB:       0,
 		})
+	default:
+		db[serviceName] = Jmemory()
 	}
 }
 
@@ -45,7 +45,9 @@ func Controller(router *web.Router, serviceName string, storage string, options 
 
 // GET /messages
 func (c *GlobalContext) Find(rw web.ResponseWriter, req *web.Request) {
-	service := strings.Split(req.RoutePath(), "/")[1]
+	ser := strings.Split(req.RoutePath(), "/")
+	req.Body.Close()
+	service := ser[len(ser)-2]
 	// TODO: Allow filters
 	res := db[service].Find("*")
 	jsonError(rw, res.Error)
@@ -54,19 +56,24 @@ func (c *GlobalContext) Find(rw web.ResponseWriter, req *web.Request) {
 
 // GET /messages/<id>
 func (c *GlobalContext) Get(rw web.ResponseWriter, req *web.Request) {
-	service := strings.Split(req.RoutePath(), "/")[1]
-	res := db[service].Get(req.PathParams["id"])
+	ser := strings.Split(req.RoutePath(), "/")
+	id := req.PathParams["id"]
+	req.Body.Close()
+	service := ser[len(ser)-2]
+	res := db[service].Get(id)
 	jsonError(rw, res.Error)
 	jsonAnswer(rw, jsonParse(res.Data))
 }
 
 // POST /messages
 func (c *GlobalContext) Create(rw web.ResponseWriter, req *web.Request) {
-	service := strings.Split(req.RoutePath(), "/")[1]
+	ser := strings.Split(req.RoutePath(), "/")
+	service := ser[len(ser)-2]
 	// TODO: Allow set Key as parameter at creating
 	key := randomKey(service)
 	//Parse data
 	u, err1 := jsonReqParse(req, new(Anon))
+	req.Body.Close()
 	jsonError(rw, err1)
 	res1, err2 := json.Marshal(u)
 	jsonError(rw, err2)
@@ -82,13 +89,15 @@ func (c *GlobalContext) Create(rw web.ResponseWriter, req *web.Request) {
 
 // PUT /messages[/<id>]
 func (c *GlobalContext) Update(rw web.ResponseWriter, req *web.Request) {
-	service := strings.Split(req.RoutePath(), "/")[1]
+	ser := strings.Split(req.RoutePath(), "/")
+	service := ser[len(ser)-2]
 	u, err1 := jsonReqParse(req, new(Anon))
 	jsonError(rw, err1)
 	r, err2 := json.Marshal(u)
 	jsonError(rw, err2)
 
 	res := db[service].Set(req.PathParams["id"], string(r))
+	req.Body.Close()
 	jsonError(rw, res.Error)
 	jsonAnswer(rw, jsn{
 		"status": res.Data,
@@ -97,7 +106,8 @@ func (c *GlobalContext) Update(rw web.ResponseWriter, req *web.Request) {
 
 // PATCH /messages[/<id>]
 func (c *GlobalContext) Patch(rw web.ResponseWriter, req *web.Request) {
-	service := strings.Split(req.RoutePath(), "/")[1]
+	ser := strings.Split(req.RoutePath(), "/")
+	service := ser[len(ser)-2]
 	var uu map[string]string
 	r1, err1 := jsonReqParse(req, uu)
 	jsonError(rw, err1)
@@ -114,6 +124,7 @@ func (c *GlobalContext) Patch(rw web.ResponseWriter, req *web.Request) {
 	res, err2 := json.Marshal(rr)
 	jsonError(rw, err2)
 	o := db[service].Set(req.PathParams["id"], string(res))
+	req.Body.Close()
 	jsonError(rw, o.Error)
 	jsonAnswer(rw, jsn{
 		"status": o.Data,
@@ -122,8 +133,10 @@ func (c *GlobalContext) Patch(rw web.ResponseWriter, req *web.Request) {
 
 // DELETE /messages[/<id>]
 func (c *GlobalContext) Remove(rw web.ResponseWriter, req *web.Request) {
-	service := strings.Split(req.RoutePath(), "/")[1]
+	ser := strings.Split(req.RoutePath(), "/")
+	service := ser[len(ser)-2]
 	r := db[service].Del(req.PathParams["id"])
+	req.Body.Close()
 	jsonError(rw, r.Error)
 	jsonAnswer(rw, jsn{
 		"status": r.Data,

@@ -1,4 +1,5 @@
 {
   "port": "8887",
-  "staticFolder": "static"
+  "staticFolder": "static",
+  "apiPrefix": "/api"
 }

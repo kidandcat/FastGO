@@ -44,6 +44,7 @@ type dbc interface {
 type Config struct {
 	Port         string `json:"port"`
 	StaticFolder string `json:"staticFolder"`
+	ApiPrefix    string `json:"apiPrefix"`
 }
 
 type GlobalContext struct{}
