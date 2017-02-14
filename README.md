@@ -1,6 +1,6 @@
-# FeathersGo
+# FastGO
 
-FeathersJS in Go language
+FastGO in Go language
 
 ## Installation
 
@@ -9,7 +9,7 @@ FeathersJS in Go language
 
 ## Usage
 
-Configure your Services, and boom! you have your REST api.
+Fast Web framework in GO, Go is fast, this framework make the development fast.
 
 ## Contributing
 
