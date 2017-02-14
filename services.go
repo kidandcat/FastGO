@@ -4,10 +4,10 @@ import "github.com/gocraft/web"
 
 func Services(router *web.Router) {
 
-	//Controller(router, "memory", "memory", jsn{})
+	//Controller(router, "user", "memory", jsn{})
 	Controller(router, "ticket", "redis", jsn{
-		"Addr":     "localhost:6667",
+		"Addr":     "localhost:6666",
 		"Password": "",
 	})
-	//Controller(router, "ticket", "memory", jsn{})
+	Controller(router, "user", "memory", jsn{})
 }

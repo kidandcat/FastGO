@@ -11,7 +11,6 @@ func Jmemory() *memoryStorage {
 
 func (me *memoryStorage) Find(filter string) ResultJsnArray {
 	var us []jsn
-	//keys := make([]string, 0, len((*me).Memory))
 	for k, v := range me.Memory {
 		us = append(us, jsn{
 			"Data": jsonParse(v),

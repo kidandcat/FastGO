@@ -13,7 +13,7 @@ func setRouter() *web.Router {
 	router := web.New(cxt).
 		Middleware(web.LoggerMiddleware).
 		Middleware(web.ShowErrorsMiddleware).
-		Middleware(web.StaticMiddleware("./"+config.StaticFolder, web.StaticOption{})).
+		Middleware(web.StaticMiddleware("./"+config.StaticFolder, web.StaticOption{IndexFile: "index.html"})).
 		NotFound((cxt).NotFound)
 
 	Services(router)
