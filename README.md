@@ -1,6 +1,6 @@
 # FastGO
 
-FastGO in Go language
+Fast Web framework in GO, Go is fast, this framework makes the development fast.
 
 ## Installation
 
@@ -9,7 +9,7 @@ FastGO in Go language
 
 ## Usage
 
-Fast Web framework in GO, Go is fast, this framework make the development fast.
+-
 
 ## Contributing
 
