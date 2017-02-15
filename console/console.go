@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	TEMPLATEURL = "https://github.com/kidandcat/FeathersGO.git"
+	TEMPLATEURL = "https://github.com/kidandcat/FastGO.git"
 	GOCRAFT     = "github.com/gocraft/web"
 	TOML        = "github.com/BurntSushi/toml"
 )

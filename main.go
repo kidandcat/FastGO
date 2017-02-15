@@ -28,14 +28,11 @@ func panicOnError(err error) {
 // TODO: Handle config file inexistence
 func loadConfig() {
 	configFile, err := os.Open("config.json")
-	if err != nil {
-		panicOnError(err)
-	}
+	panicOnError(err)
 
 	jsonParser := json.NewDecoder(configFile)
-	if err = jsonParser.Decode(&config); err != nil {
-		panicOnError(err)
-	}
+	err1 := jsonParser.Decode(&config)
+	panicOnError(err1)
 }
 
 func jsonReqParse(req *web.Request, target interface{}) (interface{}, error) {

@@ -32,7 +32,6 @@ type DataKey struct {
 
 type Anon interface{}
 
-// TODO: Generic database wrapper
 type dbc interface {
 	Find(string) ResultJsnArray
 	Get(string) ResultString

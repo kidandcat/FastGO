@@ -22,5 +22,5 @@ func setRouter() *web.Router {
 }
 
 func (c *GlobalContext) NotFound(rw web.ResponseWriter, req *web.Request) {
-	fmt.Fprint(rw, "Route not found, sorry")
+	fmt.Fprint(rw, "404 Route not found, sorry")
 }
