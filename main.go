@@ -1,10 +1,13 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
+
+	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/gocraft/web"
 )
@@ -15,8 +18,23 @@ func main() {
 	loadConfig()
 	router := setRouter()
 
+	certManager := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist("galax.be"),
+		Cache:      autocert.DirCache("certs"),
+	}
+
 	fmt.Println("Server listening at ", config.Port)
-	panicOnError(http.ListenAndServe("0.0.0.0:"+config.Port, router))
+	server := &http.Server{
+		Addr:    ":" + config.Port,
+		Handler: router,
+		TLSConfig: &tls.Config{
+			GetCertificate: certManager.GetCertificate,
+		},
+	}
+
+	server.ListenAndServeTLS("", "")
+	//panicOnError(http.ListenAndServe("0.0.0.0:"+config.Port, router))
 }
 
 func panicOnError(err error) {
